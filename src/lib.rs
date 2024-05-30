@@ -33,6 +33,28 @@ struct Functions<'a> {
 
 static REX_MODULE: OnceLock<Library> = OnceLock::new();
 
+#[cfg(target_os = "macos")]
+fn rex() -> &'static Library {
+    use libc::dladdr;
+
+    REX_MODULE.get_or_init(|| {
+        let mut info = libc::Dl_info {
+            dli_fname: std::ptr::null(),
+            dli_fbase: std::ptr::null_mut(),
+            dli_sname: std::ptr::null(),
+            dli_saddr: std::ptr::null_mut(),
+        };
+        let result = unsafe { dladdr(&rex as *const _ as *const c_void, &mut info) };
+        let self_path = unsafe { std::ffi::CStr::from_ptr(info.dli_fname) }.to_string_lossy();
+        let directory = std::path::Path::new(self_path.as_ref()).parent().unwrap();
+        let path = directory.join("Rex Shared Library-original");
+        let full_path = std::fs::canonicalize(path).unwrap();
+
+        unsafe { Library(libloading::Library::new(&full_path).unwrap()) }
+    })
+}
+
+#[cfg(target_os = "windows")]
 fn rex() -> &'static Library {
     REX_MODULE.get_or_init(|| {
         let path = "Rex Shared Library-original";
