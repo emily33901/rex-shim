@@ -44,7 +44,7 @@ fn rex() -> &'static Library {
             dli_sname: std::ptr::null(),
             dli_saddr: std::ptr::null_mut(),
         };
-        let result = unsafe { dladdr(&rex as *const _ as *const c_void, &mut info) };
+        let result = unsafe { dladdr(&REX_MODULE as *const _ as *const c_void, &mut info) };
         let self_path = unsafe { std::ffi::CStr::from_ptr(info.dli_fname) }.to_string_lossy();
         let directory = std::path::Path::new(self_path.as_ref()).parent().unwrap();
         let path = directory.join("Rex Shared Library-original");
